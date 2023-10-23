@@ -1,0 +1,14 @@
+n = int(input())
+nums = list(map(int, input().split()))
+
+ans = -1
+arr = list(set(nums))
+arr.sort()
+
+if len(arr) != 1:
+    a = nums.count(arr[1])
+
+    if a == 1:
+        ans = nums.index(arr[1]) + 1
+
+print(ans)
