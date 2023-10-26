@@ -1,0 +1,13 @@
+n = int(input())
+arr = [0] * 101
+
+for _ in range(n):
+    x, y = tuple(map(int, input().split()))
+    for i in range(x, y + 1):
+        arr[i] += 1
+
+# print(arr)
+if arr.count(n - 1) or arr.count(n):
+    print("Yes") 
+else:
+    print("No")
