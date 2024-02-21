@@ -1,0 +1,126 @@
+# SQL Lv.3
+
+- **JOIN(), LEFT JOIN(), RIGHT JOIN()**
+    - LEFT OUTER JOIN: 왼쪽 테이블이 기준이 되며, 왼쪽 테이블의 모든 레코드와 오른쪽 테이블에서 일치하는 레코드가 결과에 포함됩니다. 오른쪽 테이블에 일치하는 레코드가 없는 경우, 결과는 왼쪽 테이블의 레코드와 NULL 값을 반환합니다.
+    - RIGHT OUTER JOIN: 오른쪽 테이블이 기준이 되며, 오른쪽 테이블의 모든 레코드와 왼쪽 테이블에서 일치하는 레코드가 결과에 포함됩니다. 왼쪽 테이블에 일치하는 레코드가 없는 경우, 결과는 오른쪽 테이블의 레코드와 NULL 값을 반환합니다.
+        
+        **[출처]** [LEFT Join Right Join의 차이점](https://blog.naver.com/mch0527/223353262111)|**작성자** [재미있는인생](https://blog.naver.com/mch0527)
+        
+
+```sql
+-- 예제1
+SELECT ANIMAL_ID, O.NAME
+FROM ANIMAL_INS I RIGHT JOIN ANIMAL_OUTS O USING(ANIMAL_ID)
+WHERE INTAKE_CONDITION IS NULL
+ORDER BY 1;
+
+-- 예제2
+SELECT I.NAME, I.DATETIME
+FROM ANIMAL_INS I LEFT JOIN ANIMAL_OUTS O USING(ANIMAL_ID)
+WHERE O.DATETIME IS NULL
+ORDER BY I.DATETIME
+LIMIT 3;
+```
+
+- **JOIN USING(KEY*)**
+
+```sql
+SELECT ANIMAL_ID, NAME
+FROM ANIMAL_INS I JOIN ANIMAL_OUTS O USING(ANIMAL_ID, NAME)
+ORDER BY DATEDIFF(O.DATETIME, I.DATETIME) DESC
+LIMIT 2;
+```
+
+- **CONCAT()
+— 문자열 합치기**
+
+```sql
+SELECT CONCAT('/home/grep/src/', BOARD_ID, 
+		'/', FILE_ID, FILE_NAME, FILE_EXT) FILE_PATH
+FROM USED_GOODS_BOARD JOIN USED_GOODS_FILE USING(BOARD_ID)
+WHERE VIEWS = 
+    (SELECT VIEWS 
+     FROM USED_GOODS_BOARD 
+     ORDER BY 1 DESC 
+     LIMIT 1)
+ORDER BY 1 DESC;
+```
+
+- **CONCAT_WS()
+— 구분자를 넣어 합치기**
+    - **SUBSTRING(string, start, length) 
+    —**  주어진 문자열(string)에서 start 위치부터 length만큼의 문자열을 추출
+
+```sql
+SELECT CONCAT('/home/grep/src/', BOARD_ID, 
+		'/', FILE_ID, FILE_NAME, FILE_EXT) FILE_PATH
+FROM USED_GOODS_BOARD JOIN USED_GOODS_FILE USING(BOARD_ID)
+WHERE VIEWS = 
+    (SELECT VIEWS 
+     FROM USED_GOODS_BOARD 
+     ORDER BY 1 DESC 
+     LIMIT 1)
+ORDER BY 1 DESC;
+```
+
+- **DATE_FORMAT()**
+
+```sql
+SELECT ORDER_ID, 
+    PRODUCT_ID, 
+    DATE_FORMAT(OUT_DATE, "%Y-%m-%d"), 
+    CASE
+        WHEN OUT_DATE IS NULL THEN "출고미정"
+        WHEN OUT_DATE <= "2022-05-01" THEN "출고완료" 
+        WHEN OUT_DATE > "2022-05-01" THEN "출고대기"
+    END "출고여부"
+FROM FOOD_ORDER
+ORDER BY 1;
+```
+
+- **NOT IN(), IS NOT NULL()**
+
+```sql
+SELECT ITEM_ID, ITEM_NAME, RARITY
+FROM ITEM_INFO
+WHERE ITEM_ID NOT IN (SELECT DISTINCT PARENT_ITEM_ID 
+                      FROM ITEM_TREE 
+                      WHERE PARENT_ITEM_ID IS NOT NULL)
+ORDER BY 1 DESC;
+```
+
+- **즐겨찾기가 가장 많은 식당 출력**
+
+```sql
+SELECT FOOD_TYPE, REST_ID, REST_NAME, FAVORITES
+FROM REST_INFO
+WHERE (FOOD_TYPE, FAVORITES) IN (
+    SELECT FOOD_TYPE, MAX(FAVORITES)
+    FROM REST_INFO
+    GROUP BY FOOD_TYPE 
+)
+ORDER BY 1 DESC;
+```
+
+- **with() 임시테이블 생성**
+
+```sql
+WITH P as (SELECT WRITER_ID, SUM(PRICE) TOTAL_SALES
+           FROM USED_GOODS_BOARD
+           WHERE STATUS = 'DONE'
+           GROUP BY WRITER_ID
+           HAVING SUM(PRICE) >= 700000)
+           
+SELECT USER_ID, NICKNAME, TOTAL_SALES
+FROM USED_GOODS_USER, P
+WHERE USER_ID = WRITER_ID
+ORDER BY 3;
+
+-- 간단한 풀이
+SELECT USER_ID, NICKNAME, SUM(PRICE) TOTAL_SALES
+FROM USED_GOODS_USER U, USED_GOODS_BOARD B
+WHERE USER_ID = WRITER_ID AND STATUS = 'DONE'
+GROUP BY WRITER_ID
+HAVING SUM(PRICE) >= 700000
+ORDER BY 3;
+```
